@@ -1,0 +1,93 @@
+{
+  "1": [
+    "brexit", "nato", "united nations", "diplomacy", "diplomat", "sanctions", "treaty",
+    "bilateral", "embassy", "ambassador", "ceasefire", "peace talks", "kremlin",
+    "beijing", "moscow", "pyongyang", "tehran", "damascus", "taliban", "refugee",
+    "asylum seeker", "foreign minister", "prime minister", "parliamentary", "sovereignty",
+    "territorial", "geopolitical", "foreign policy", "humanitarian aid", "cross-border",
+    "middle east", "european union", "allies", "coalition", "war zone", "airstrike",
+    "insurgents", "militants", "border dispute", "de-escalation"
+  ],
+  "2": [
+    "trump", "biden", "obama", "white house", "capitol hill", "oval office", "impeachment",
+    "senate", "senator", "congress", "congressional", "house speaker", "pelosi", "mcconnell",
+    "gop", "democrat", "republican", "bipartisan", "filibuster", "legislation", "lawmakers",
+    "veto", "governor", "presidential campaign", "caucus", "primary election", "ballot",
+    "polling", "voter turnout", "electoral college", "mueller", "subpoena", "testimony",
+    "attorney general", "partisan", "supreme court justice", "kavanaugh", "gorsuch"
+  ],
+  "3": [
+    "wall street", "dow jones", "s&p 500", "nasdaq", "stock market", "shares surged",
+    "shares fell", "quarterly earnings", "revenue", "q1", "q2", "q3", "q4", "fiscal year",
+    "federal reserve", "central bank", "interest rate", "inflation", "recession",
+    "treasury yield", "bonds", "ipo", "initial public offering", "hedge fund", "private equity",
+    "merger", "acquisition", "antitrust", "bankruptcy", "chapter 11", "ceo", "cfo", "dividend",
+    "market cap", "venture capital", "trade deficit", "tariffs", "crypto", "bitcoin"
+  ],
+  "4": [
+    "apple", "google", "alphabet", "microsoft", "amazon", "facebook", "meta", "silicon valley",
+    "iphone", "ipad", "android", "smartphone", "artificial intelligence", "machine learning",
+    "cybersecurity", "data breach", "hacker", "ransomware", "malware", "phishing", "cloud computing",
+    "semiconductor", "microchip", "intel", "nvidia", "amd", "qualcomm", "operating system",
+    "software update", "app store", "social media platform", "autonomous vehicle", "self-driving",
+    "virtual reality", "augmented reality", "vr headset", "algorithm", "telecom", "5g network"
+  ],
+  "5": [
+    "nasa", "spacex", "international space station", "hubble", "james webb", "telescope",
+    "astronomers", "astrophysics", "black hole", "galaxy", "supernova", "mars rover", "curiosity",
+    "perseverance", "lunar", "moon landing", "asteroid", "comet", "meteor", "quantum physics",
+    "particle collider", "cern", "gravitational wave", "fossil", "paleontologist", "dinosaur",
+    "dna sequencing", "genome", "crispr", "gene editing", "evolutionary", "solar system",
+    "exoplanet", "subatomic", "scientific discovery", "peer-reviewed", "neuroscience"
+  ],
+  "6": [
+    "fda", "cdc", "world health organization", "clinical trial", "phase 3", "vaccine",
+    "vaccination", "immunization", "pharmaceutical", "pfizer", "moderna", "astrazeneca",
+    "cancer", "tumor", "chemotherapy", "oncology", "alzheimer", "dementia", "cardiovascular",
+    "heart attack", "stroke", "diabetes", "obesity", "hypertension", "coronavirus", "covid-19",
+    "pandemic", "epidemic", "outbreak", "infectious disease", "antiviral", "antibiotics",
+    "hospitalization", "icu", "patient care", "prescription drug", "mental health", "depression",
+    "opioid crisis", "overdose", "public health", "biotech"
+  ],
+  "7": [
+    "nfl", "nba", "mlb", "nhl", "fifa", "premier league", "champions league", "super bowl",
+    "world series", "stanley cup", "world cup", "olympics", "paralympics", "quarterback",
+    "touchdown", "home run", "slam dunk", "three-pointer", "goalkeeper", "penalty kick",
+    "grand slam", "wimbledon", "us open", "french open", "pga tour", "formula 1", "nascar",
+    "championship", "playoffs", "tournament", "semifinal", "roster", "head coach", "referee",
+    "traded to", "free agent", "scored twice", "hat-trick", "injury reserve"
+  ],
+  "8": [
+    "hollywood", "box office", "academy awards", "oscars", "golden globes", "emmy awards",
+    "grammy awards", "film festival", "sundance", "cannes", "movie premiere", "blockbuster",
+    "sequel", "franchise", "trailer released", "soundtrack", "album release", "billboard 200",
+    "hot 100", "concert tour", "live performance", "actor", "actress", "filmmaker", "broadway",
+    "netflix", "hbo", "disney+", "streaming series", "showrunner", "celebrity gossip",
+    "red carpet", "comic-con", "screenplay", "rock band", "recording artist", "coachella"
+  ],
+  "9": [
+    "climate change", "global warming", "greenhouse gas", "carbon emissions", "carbon footprint",
+    "paris climate agreement", "renewable energy", "solar panels", "wind farm", "fossil fuels",
+    "deforestation", "amazon rainforest", "glacier melting", "polar ice", "sea level rise",
+    "extreme weather", "heatwave", "wildfire", "bushfire", "hurricane", "typhoon", "cyclone",
+    "tornado", "flash flooding", "drought", "endangered species", "biodiversity", "conservation",
+    "ocean pollution", "plastic waste", "air quality", "smog", "epa regulation", "clean energy"
+  ],
+  "10": [
+    "police department", "sheriff", "law enforcement", "fbi", "dea", "suspect arrested",
+    "taken into custody", "handcuffed", "homicide", "murder charge", "fatal shooting",
+    "mass shooting", "gunman", "armed robbery", "burglary", "stolen", "carjacking", "arson",
+    "assault", "domestic violence", "indictment", "grand jury", "arraignment", "pleaded guilty",
+    "pleaded not guilty", "prosecutor", "district attorney", "defense attorney", "courtroom",
+    "bail set", "trial begins", "jury verdict", "sentenced to prison", "death penalty",
+    "life sentence", "parole", "drug cartel", "smuggling", "money laundering", "fraud scheme"
+  ],
+  "11": [
+    "travel destination", "wanderlust", "airline tickets", "hotel resort", "vacation rental",
+    "backpacking", "road trip", "tourism", "culinary", "michelin star", "head chef", "tasting menu",
+    "gourmet", "street food", "cocktail bar", "craft beer", "fashion week", "runway collection",
+    "streetwear", "couture", "vintage clothing", "interior decor", "home renovation", "skincare routine",
+    "wellness retreat", "yoga studio", "horoscope", "zodiac sign", "astrology chart", "dating advice",
+    "parenting tips", "personal finance tips", "lifestyle trends"
+  ]
+}
