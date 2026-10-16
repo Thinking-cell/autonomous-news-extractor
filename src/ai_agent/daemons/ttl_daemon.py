@@ -3,16 +3,16 @@ import time
 import json
 import socket
 
-HOST = '127.0.0.1' # local host
-PORT = 5555 # gateway for the daemon
-PING_TIME = 30
-INACTIVITY_TIMEOUT = 600 # secs
-PRUNING_FREQUENCY = 24 * 3600
-TTL_SECONDS = 3 * 24 * 3600 # 3 days
-TEMP_EXT = '.tmp'
+HOST = '127.0.0.1' # loopback address: only processes on this exact machine can connect
+PORT = 5555 # port gateway for daemon communication
+PING_TIME = 30 # socket accept timeout check interval (seconds)
+INACTIVITY_TIMEOUT = 600 # 10 minutes of silence triggers clean auto-shutdown to save memory
+PRUNING_FREQUENCY = 24 * 3600 # clean out old URLs once every 24 hours
+TTL_SECONDS = 3 * 24 * 3600 # 3 days: URLs older than 3 days get deleted (they won't be on BBC anymore)
+TEMP_EXT = '.tmp' # temp extension for atomic crash-safe saves
 CONNECTION_RETRIES = 10
-SAVE_FREQUENCY = 10
-BUFFER_SIZE = 2**19 # 1 MB
+SAVE_FREQUENCY = 10 # save cache to disk every 10 update requests to prevent disk wear
+BUFFER_SIZE = 2**19 # 512 KB buffer size for receiving socket payloads
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(SCRIPT_DIR, '..', 'json', 'seen_url.json')
@@ -29,6 +29,7 @@ def main():
     input('Press Enter to exit...')
     
 
+# loads previously seen URLs from disk into RAM dictionary on startup
 def load_cache(file_path: str = CACHE_FILE) -> dict[str, int]:
     if not os.path.exists(file_path):
         return {}
@@ -40,6 +41,8 @@ def load_cache(file_path: str = CACHE_FILE) -> dict[str, int]:
     except Exception:
         return {}
 
+# atomic crash-safe save: write to .tmp file first, then use os.replace to swap pointers instantly
+# this guarantees that seen_url.json is never half-written or corrupted if power cuts or process dies
 def save_cache(cache: dict[str, int],  file_path: str = CACHE_FILE):
     dirs = os.path.dirname(file_path)
     if dirs:
@@ -51,6 +54,7 @@ def save_cache(cache: dict[str, int],  file_path: str = CACHE_FILE):
 
     os.replace(temp_file, file_path)
 
+# sliding-window eviction: deletes URLs older than 3 days to keep memory usage bounded
 def prune_cache(cache: dict[str, int]) -> int:
     present = time.time()
     expired_url = [url for url, ts in cache.items() if (present - ts) >= TTL_SECONDS]
@@ -59,6 +63,7 @@ def prune_cache(cache: dict[str, int]) -> int:
 
     return len(expired_url)
 
+# reads request from connected client, processes action, and returns response
 def handle_client(conn: socket.socket, cache: dict[str, int]) -> bool:
     response = {'status' : 'ok'}
     dirty = False
@@ -101,6 +106,7 @@ def handle_client(conn: socket.socket, cache: dict[str, int]) -> bool:
             pass
         return dirty
 
+# main daemon loop: binds socket, accepts connections, checks inactivity, and prunes periodically
 def run_daemon(cache: dict[str, int]):
     # -------------------------------------------------------------------------
     # SOCKET IPC SUMMARY (Inter-Process Communication):
@@ -134,6 +140,7 @@ def run_daemon(cache: dict[str, int]):
                 conn, addr = server_socket.accept()
                 error_count = 0 # reset error count
             except socket.timeout:
+                # accept timed out: check if client has been silent for 10 minutes
                 idle_time = time.time() - last_contact
                 if idle_time > INACTIVITY_TIMEOUT:
                     print(f'<-> Client inactive for {INACTIVITY_TIMEOUT} secs, Shutting down...')

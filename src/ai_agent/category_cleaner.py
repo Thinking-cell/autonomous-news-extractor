@@ -3,11 +3,16 @@ import re
 import json
 import ollama
 
+# Offline AI batch categorizer:
+# Takes thousands of messy, raw category names from the historical dataset and uses
+# local Llama 3.2 to map them into our 12 standardized Master Categories (IDs 0 to 11).
+# Saves the results to category_lookup.json so the live agent and packer get instant O(1) lookups.
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OLLAMA_MODEL = 'llama3.2'
 DEFAULT_DICT = {'General' : 0}
-BATCH_SIZE = 30
-SAVE_FREQUENCY = 300
+BATCH_SIZE = 30 # send 30 categories at a time so Llama stays accurate without getting confused
+SAVE_FREQUENCY = 300 # save progress to disk every 300 categories so we can resume if interrupted
 AGENT_RETRIES = 5
 LOOKUP_JSON_PATH = os.path.join(SCRIPT_DIR, 'json', 'category_lookup.json')
 HEADER_PATH = os.path.join(SCRIPT_DIR, "category_map.h")
@@ -46,6 +51,7 @@ MASTER_CATEGORIES = {
     11: "Lifestyle"
 }
 
+# loads previously saved category mappings from disk so the script can resume where it left off
 def load_lookup(json_path: str) -> dict[str, int]:
 
     if not os.path.exists(json_path):

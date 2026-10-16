@@ -1,0 +1,21 @@
+# Python Virtual Environments
+.venm/
+venv/
+.venv/
+env/
+
+# Python Bytecode and Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary Files and Logs
+*.tmp
+*.log
+
+# Editor and OS Files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

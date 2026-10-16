@@ -81,18 +81,23 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 def main():
     print('-_- Starting Agent...')
     print('-_- Starting Daemon...')
+    # 1. boot up the background socket daemon if it isn't running yet
     start_daemon()
+    # 2. start background thread that pings daemon every 60s so it doesn't shut down
     stop_heartbeat = start_heartbeat()
     global MASTER_CATEGORIES
     MASTER_CATEGORIES = load_master_categories()
     print('-_- Agent is running...')
+    # 3. run the main news extraction loop
     run_agent()
+    # 4. signal the heartbeat thread to wake up and exit cleanly
     stop_heartbeat.set()
     print('-_- Shutdown succesfull.')
     input('Press Enter to exit...')
 
 
 
+# main loop: continuously pulls feed, filters ads & duplicates, packs into binary, and stages for cpp
 def run_agent():
     feed = []
     cache = {}
@@ -103,29 +108,37 @@ def run_agent():
             
             print('-_- Fetching feed from BBC...')
             feed = fetch_bbc_feed()
+            # ask daemon which URLs we already processed in earlier cycles
             cache = get_seen_urls()
+            # skip any article whose URL is already in our seen cache
             new_feed = [entry for entry in feed if entry.get('link', '') not in cache]
             urls_proessed = {}
             print('-_- Processing Feed...')
             for entry in new_feed:
+                # filter out ads and promos before doing heavy packing or AI work
                 if is_ad(entry):
                     print(f'-_- [Skipped] Ad: {entry.get("title", "")}')
                     urls_proessed.update({entry.get('link', 'INVALID') : now})
                     continue
+                # pack the clean news item into our 1,188-byte binary struct
                 record = pack_record(entry)
+                # append to staging buffer (for C++) and master archive (permanent backup)
                 stage_and_archive__record(record)
                 now = int(time.time())
                 urls_proessed.update({entry.get('link', 'INVALID') : now})
                 print(f'-_- [Processed] Article: {entry.get("title", "")}')
 
+            # if we processed new articles, send them to the daemon to update the cache
             if urls_proessed:
                 total_records_procesed += len(urls_proessed)
                 update_urls(urls_proessed)
                 print(f'-_- Processed Entries: {len(urls_proessed)}')
             cache = get_seen_urls()
             print('-_- Handing data to DB...')
+            # try to atomically hand off staged records to C++ slot if slot is empty
             try_handoff_to_injector()
             error_count = 0
+            # wait 15 minutes because BBC updates their RSS feed every 15 mins (source <ttl>)
             print(f'-_- [Waiting] {WAIT_TIME//60} mins for news to refresh...')
             time.sleep(WAIT_TIME)
 
@@ -135,7 +148,7 @@ def run_agent():
             print('-_- shutting down...')
             return 
         except Exception as e:
-            print(f'-_- [Warning] An error occured during processing({error_count}/{AGENT_RETRIES}): {e}')
+            print(f'-_- [Warning] An error occured during processing({AGENT_RETRIES - error_count}/{AGENT_RETRIES}): {e}')
             print(f'-_- Trying again in {WAIT_TIME//60} mins...')
             error_count += 1
             if error_count > AGENT_RETRIES:
@@ -191,6 +204,7 @@ def is_ad_with_llama(entry: dict, depth: int = AGENT_RETRIES) -> bool:
         print(f'-_- [WARNING] Ollama ad detection error ({depth}/{AGENT_RETRIES}): {e}')
         return is_ad_with_llama(entry, depth - 1)
 
+# returns true if either the fast regex check or the AI check flags this item as an ad
 def is_ad(entry: dict) -> bool:
     if is_ad_heuristic(entry):
         return True
@@ -200,6 +214,7 @@ def is_ad(entry: dict) -> bool:
 
     return False
 
+# appends binary record to both staging file (buffer for C++) and master archive (permanent backup)
 def stage_and_archive__record(record: bytes ,staging_path: str = STAGING_BIN, archive_bin: str = ARCHIVE_BIN):
     if not record:
         return
@@ -209,17 +224,19 @@ def stage_and_archive__record(record: bytes ,staging_path: str = STAGING_BIN, ar
     with open(archive_bin, 'ab') as a_file:
         a_file.write(record)
     
+# atomic handoff: if C++ consumed the previous batch, swap staging into latest slot via NTFS rename
 def try_handoff_to_injector(inj_bin_path : str = INJECTOR_PATH, staging_bin: str = STAGING_BIN):
-    # return if the db hasnt consumed the prev file
+    # return if downstream C++ database has not consumed the previous batch yet
     if os.path.exists(inj_bin_path):
         return
 
-    # if file exist in staging bin and has records
+    # if file exists in staging bin and has records, move atomically in 0 ms
     if os.path.exists(staging_bin) and os.path.getsize(staging_bin):
         shutil.move(staging_bin, inj_bin_path)
-        print(f'-_- Handed latest records to DB from {staging_bin} to {inj_bin_path}')
+        print(f'-_- Handed latest records to DB from:\n-_- {staging_bin} to {inj_bin_path}')
 
 
+# converts raw RSS entry dictionary into our exact 1,188-byte binary struct
 def pack_record(entry: dict) -> bytes:
     title = entry.get('title', '')
     link = entry.get('link', '')
@@ -246,6 +263,7 @@ def pack_record(entry: dict) -> bytes:
 
     
 
+# load the 12 master categories and flip { "0": "General" } to { "General": 0 }
 def load_master_categories(master_path : str = MASTER_CATEGORIES_PATH):
     if not os.path.exists(master_path):
         return {
@@ -270,11 +288,11 @@ def load_master_categories(master_path : str = MASTER_CATEGORIES_PATH):
 
     return processed_master
 
-# fetches live BBC feed
+# fetches live BBC feed and parses entries into clean dictionaries
 def fetch_bbc_feed(url : str = BBC_FEED_URL) -> list[dict]:
     feed = feedparser.parse(url)
 
-    # check if the feed is ok and  entries if not return
+    # check if the feed is ok and has entries, if not return empty list
     if feed.bozo and not feed.entries:
         return []
 
@@ -297,25 +315,29 @@ def fetch_bbc_feed(url : str = BBC_FEED_URL) -> list[dict]:
             continue
 
         articles.append({
-            'title' : title,
+            'title' : html.unescape(title),
             'link' : link,
             'published_on' : published_on,
-            'summary' : summary
+            'summary' : html.unescape(summary)
         })
 
 
     return articles
 
+# unescapes HTML entities (&amp;, &quot;) and ensures summary fits between 100 and 255 chars
 def clean_summary(title : str, summary : str) -> str:
     if not title or not summary:
         return ''
     cleansed_summary = html.unescape(summary)
+    # if summary is too short or too long for our binary buffer, let Ollama rewrite it
     if not (100 <= len(cleansed_summary) <= 255):
             cleansed_summary = summarize_with_ollama(title, cleansed_summary)
 
     return cleansed_summary
 
+# asks llama3.2 to write a concise 100-250 char summary with recursive retry on invalid JSON
 def summarize_with_ollama(title : str, summary : str, depth : int = AGENT_RETRIES) -> str:
+    # fallback to simple string slice if retries exhausted
     if depth <= 0:
         return summary[:250] if len(summary) > 250 else summary
 
@@ -333,6 +355,7 @@ def summarize_with_ollama(title : str, summary : str, depth : int = AGENT_RETRIE
         content = json.loads(response['message']['content'])
         ai_summary = content.get('summary', '').strip()
 
+        # enforce strict length bounds for binary struct
         if 100 <= len(ai_summary) <= 255:
             return ai_summary
 
@@ -342,7 +365,9 @@ def summarize_with_ollama(title : str, summary : str, depth : int = AGENT_RETRIE
         print(f'-_- [WARNING] Ollama encountered an error during processing...\n({depth}/{AGENT_RETRIES}): {e} ')
         return summarize_with_ollama(title, summary, depth - 1)
 
+# asks llama3.2 to classify headline and summary into one of our 12 master categories
 def categorize_with_ollama(title : str, summary : str, depth : int = AGENT_RETRIES) -> str:
+    # fallback to General if retries exhausted
     if depth <= 0:
         return 'General'
 
